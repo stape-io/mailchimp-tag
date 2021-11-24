@@ -9,14 +9,14 @@ Mailchimp tag allows to:
 - Create or update contact
 - Create or update contact and track event simultaneously
 
-Mailchimp tag uses the MD5 hash of the lowercase version of the contact's email address for API calls. You can use [Data Tag and Data Client](https://stape.io/sending-data-from-google-tag-manager-web-container-to-the-server-container/) to send hashed emails from web to server container.
+Mailchimp tag uses the MD5 hash of the lowercase version of the contact's email address for API calls. You can use [Data Tag and Data Client](https://stape.io/blog/sending-data-from-google-tag-manager-web-container-to-the-server-container) to send hashed emails from web to server container.
 
 This tag allows adding merge tags and event parameters to Mailchimp.
 
 
 ### How to use Mailchimp tag for Google Tag Manager Server container
 
-- [Connect your website to Mailchimp using the Google Tag Manager server container](https://stape.io/connect-your-website-to-mailchimp-using-google-tag-manager-server-container/).
+- [Connect your website to Mailchimp using the Google Tag Manager server container](https://stape.io/blog/connect-your-website-to-mailchimp-using-google-tag-manager-server-container).
 
 
 ## Open Source

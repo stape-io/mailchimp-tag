@@ -64,7 +64,7 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "TEXT",
     "name": "listId",
-    "displayName": "List ID",
+    "displayName": "Audience ID",
     "simpleValueType": true,
     "valueValidators": [
       {
@@ -121,6 +121,20 @@ ___TEMPLATE_PARAMETERS___
         ],
         "help": "More info about merge fields can be found \u003ca href\u003d\"https://mailchimp.com/help/getting-started-with-merge-tags/\" target\u003d\"_blank\"\u003ehere\u003c/a\u003e.",
         "displayName": "Merge Fields"
+      },
+      {
+        "type": "SIMPLE_TABLE",
+        "name": "contactTags",
+        "simpleTableColumns": [
+          {
+            "defaultValue": "",
+            "displayName": "Name",
+            "name": "name",
+            "type": "TEXT"
+          }
+        ],
+        "help": "More info about tags can be found \u003ca href\u003d\"https://mailchimp.com/developer/marketing/api/list-member-tags/\" target\u003d\"_blank\"\u003ehere\u003c/a\u003e.",
+        "displayName": "Tags"
       }
     ],
     "enablingConditions": [
@@ -217,6 +231,10 @@ if (!apiKeyData[1]) {
       "merge_fields": formatFields(data.mergeFields)
     };
 
+    if (data.contactTags && data.contactTags.length) {
+      bodyData.tags = formatTags(data.contactTags);
+    }
+
     if (isDebug) {
       logToConsole('Mailchimp createOrUpdateContact data: ', bodyData);
     }
@@ -266,83 +284,18 @@ function formatFields(mergeFields) {
     mergeFieldsResult[mergeFields[mergeFieldsKey].field] = mergeFields[mergeFieldsKey].value;
   }
 
-  return mergeFieldsResult;const getRemoteAddress = require('getRemoteAddress');
-  const sendHttpRequest = require('sendHttpRequest');
-  const encodeUriComponent = require('encodeUriComponent');
-  const JSON = require('JSON');
+  return mergeFieldsResult;
+}
 
-  const logToConsole = require('logToConsole');
-  const getContainerVersion = require('getContainerVersion');
-  const containerVersion = getContainerVersion();
-  const isDebug = containerVersion.debugMode;
 
-  let apiKeyData = data.apiKey.split('-');
+function formatTags(tags) {
+  let tagsResult = [];
 
-  if (!apiKeyData[1]) {
-    data.gtmOnFailure();
-  } else {
-    if (data.type === 'createOrUpdateContact' || data.type === 'createOrUpdateContactTrackEvent') {
-      let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/'+ encodeUriComponent(data.emailHashed);
-
-      let bodyData = {
-        "email_address": data.email,
-        "status_if_new": 'subscribed',
-        "ip_signup": getRemoteAddress(),
-        "merge_fields": formatFields(data.mergeFields)
-      };
-
-      if (isDebug) {
-        logToConsole('Mailchimp createOrUpdateContact data: ', bodyData);
-      }
-
-      sendHttpRequest(url, (statusCode, headers, body) => {
-        if (statusCode >= 200 && statusCode < 300) {
-          if (data.type === 'createOrUpdateContactTrackEvent') {
-            sendEventRequest();
-          } else {
-            data.gtmOnSuccess();
-          }
-        } else {
-          data.gtmOnFailure();
-        }
-      }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: 'PUT', timeout: 3500}, JSON.stringify(bodyData));
-    } else {
-      sendEventRequest();
-    }
+  for (let tagsKey in tags) {
+    tagsResult.push(tags[tagsKey].name);
   }
 
-  function sendEventRequest()
-  {
-    let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/' + encodeUriComponent(data.emailHashed) + '/events';
-
-    let bodyData = {
-      "name": data.eventName,
-      "properties": formatFields(data.eventProperties)
-    };
-
-    if (isDebug) {
-      logToConsole('Mailchimp trackEvent data: ', bodyData);
-    }
-
-    sendHttpRequest(url, (statusCode, headers, body) => {
-      if (statusCode >= 200 && statusCode < 300) {
-        data.gtmOnSuccess();
-      } else {
-        data.gtmOnFailure();
-      }
-    }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: 'POST', timeout: 3500}, JSON.stringify(bodyData));
-  }
-
-  function formatFields(mergeFields) {
-    let mergeFieldsResult = {};
-
-    for (let mergeFieldsKey in mergeFields) {
-      mergeFieldsResult[mergeFields[mergeFieldsKey].field] = mergeFields[mergeFieldsKey].value;
-    }
-
-    return mergeFieldsResult;
-  }
-
+  return tagsResult;
 }
 
 
@@ -470,3 +423,5 @@ scenarios: []
 ___NOTES___
 
 Created on 02/05/2021, 09:39:23
+
+
