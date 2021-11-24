@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 2d72f0bc6bc6db1b125eeace7989ac61fcf238a6
+    changeNotes: Add ability to assign tags.
   - sha: d541c9f768446c781fa90404d23152e5a2493fa2
     changeNotes: Move to Stape.
   - sha: 55fb3c4ca4c4e6a3012990d4d95996da1dccc029
