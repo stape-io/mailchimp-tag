@@ -210,11 +210,13 @@ const getRemoteAddress = require('getRemoteAddress');
 const sendHttpRequest = require('sendHttpRequest');
 const encodeUriComponent = require('encodeUriComponent');
 const JSON = require('JSON');
-
+const getRequestHeader = require('getRequestHeader');
 const logToConsole = require('logToConsole');
 const getContainerVersion = require('getContainerVersion');
+
 const containerVersion = getContainerVersion();
 const isDebug = containerVersion.debugMode;
+const traceId = isDebug ? getRequestHeader('trace-id') : undefined;
 
 let apiKeyData = data.apiKey.split('-');
 
@@ -223,7 +225,7 @@ if (!apiKeyData[1]) {
 } else {
   if (data.type === 'createOrUpdateContact' || data.type === 'createOrUpdateContactTrackEvent') {
     let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/'+ encodeUriComponent(data.emailHashed);
-
+    let method = 'PUT';
     let bodyData = {
       "email_address": data.email,
       "status_if_new": 'subscribed',
@@ -236,7 +238,14 @@ if (!apiKeyData[1]) {
     }
 
     if (isDebug) {
-      logToConsole('Mailchimp createOrUpdateContact data: ', bodyData);
+      logToConsole(JSON.stringify({
+        'Name': 'MailChimp',
+        'Type': 'Request',
+        'TraceId': traceId,
+        'RequestMethod': method,
+        'RequestUrl': url,
+        'RequestBody': bodyData,
+      }));
     }
 
     sendHttpRequest(url, (statusCode, headers, body) => {
@@ -249,7 +258,7 @@ if (!apiKeyData[1]) {
       } else {
         data.gtmOnFailure();
       }
-    }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: 'PUT', timeout: 3500}, JSON.stringify(bodyData));
+    }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: method, timeout: 3500}, JSON.stringify(bodyData));
   } else {
     sendEventRequest();
   }
@@ -258,14 +267,21 @@ if (!apiKeyData[1]) {
 function sendEventRequest()
 {
   let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/' + encodeUriComponent(data.emailHashed) + '/events';
-
+  let method = 'POST';
   let bodyData = {
     "name": data.eventName,
     "properties": formatFields(data.eventProperties)
   };
 
   if (isDebug) {
-    logToConsole('Mailchimp trackEvent data: ', bodyData);
+    logToConsole(JSON.stringify({
+      'Name': 'MailChimp',
+      'Type': 'Request',
+      'TraceId': traceId,
+      'RequestMethod': method,
+      'RequestUrl': url,
+      'RequestBody': bodyData,
+    }));
   }
 
   sendHttpRequest(url, (statusCode, headers, body) => {
@@ -274,7 +290,7 @@ function sendEventRequest()
     } else {
       data.gtmOnFailure();
     }
-  }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: 'POST', timeout: 3500}, JSON.stringify(bodyData));
+  }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: method, timeout: 3500}, JSON.stringify(bodyData));
 }
 
 function formatFields(mergeFields) {
