@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 191640183c6119dbd6cdce23a3a3fba87f64f6f8
+    changeNotes: Fix log name
   - sha: 2d72f0bc6bc6db1b125eeace7989ac61fcf238a6
     changeNotes: Add ability to assign tags.
   - sha: d541c9f768446c781fa90404d23152e5a2493fa2
