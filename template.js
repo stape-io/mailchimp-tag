@@ -16,13 +16,13 @@ if (!apiKeyData[1]) {
   data.gtmOnFailure();
 } else {
   if (data.type === 'createOrUpdateContact' || data.type === 'createOrUpdateContactTrackEvent') {
-    let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/'+ encodeUriComponent(data.emailHashed);
+    let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/' + encodeUriComponent(data.emailHashed);
     let method = 'PUT';
     let bodyData = {
-      "email_address": data.email,
-      "status_if_new": 'subscribed',
-      "ip_signup": getRemoteAddress(),
-      "merge_fields": formatFields(data.mergeFields)
+      email_address: data.email,
+      status_if_new: 'subscribed',
+      ip_signup: getRemoteAddress(),
+      merge_fields: formatFields(data.mergeFields),
     };
 
     if (data.contactTags && data.contactTags.length) {
@@ -30,59 +30,72 @@ if (!apiKeyData[1]) {
     }
 
     if (isDebug) {
-      logToConsole(JSON.stringify({
-        'Name': 'MailChimp',
-        'Type': 'Request',
-        'TraceId': traceId,
-        'RequestMethod': method,
-        'RequestUrl': url,
-        'RequestBody': bodyData,
-      }));
+      logToConsole(
+        JSON.stringify({
+          Name: 'MailChimp',
+          Type: 'Request',
+          TraceId: traceId,
+          RequestMethod: method,
+          RequestUrl: url,
+          RequestBody: bodyData,
+        })
+      );
     }
 
-    sendHttpRequest(url, (statusCode, headers, body) => {
-      if (statusCode >= 200 && statusCode < 300) {
-        if (data.type === 'createOrUpdateContactTrackEvent') {
-          sendEventRequest();
+    sendHttpRequest(
+      url,
+      (statusCode, headers, body) => {
+        if (statusCode >= 200 && statusCode < 300) {
+          if (data.type === 'createOrUpdateContactTrackEvent') {
+            sendEventRequest();
+          } else {
+            data.gtmOnSuccess();
+          }
         } else {
-          data.gtmOnSuccess();
+          data.gtmOnFailure();
         }
-      } else {
-        data.gtmOnFailure();
-      }
-    }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: method, timeout: 3500}, JSON.stringify(bodyData));
+      },
+      { headers: { Authorization: 'Bearer ' + data.apiKey }, method: method, timeout: 3500 },
+      JSON.stringify(bodyData)
+    );
   } else {
     sendEventRequest();
   }
 }
 
-function sendEventRequest()
-{
+function sendEventRequest() {
   let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/' + encodeUriComponent(data.emailHashed) + '/events';
   let method = 'POST';
   let bodyData = {
-    "name": data.eventName,
-    "properties": formatFields(data.eventProperties)
+    name: data.eventName,
+    properties: formatFields(data.eventProperties),
   };
 
   if (isDebug) {
-    logToConsole(JSON.stringify({
-      'Name': 'MailChimp',
-      'Type': 'Request',
-      'TraceId': traceId,
-      'RequestMethod': method,
-      'RequestUrl': url,
-      'RequestBody': bodyData,
-    }));
+    logToConsole(
+      JSON.stringify({
+        Name: 'MailChimp',
+        Type: 'Request',
+        TraceId: traceId,
+        RequestMethod: method,
+        RequestUrl: url,
+        RequestBody: bodyData,
+      })
+    );
   }
 
-  sendHttpRequest(url, (statusCode, headers, body) => {
-    if (statusCode >= 200 && statusCode < 300) {
-      data.gtmOnSuccess();
-    } else {
-      data.gtmOnFailure();
-    }
-  }, {headers: {'Authorization': 'Bearer '+data.apiKey}, method: method, timeout: 3500}, JSON.stringify(bodyData));
+  sendHttpRequest(
+    url,
+    (statusCode, headers, body) => {
+      if (statusCode >= 200 && statusCode < 300) {
+        data.gtmOnSuccess();
+      } else {
+        data.gtmOnFailure();
+      }
+    },
+    { headers: { Authorization: 'Bearer ' + data.apiKey }, method: method, timeout: 3500 },
+    JSON.stringify(bodyData)
+  );
 }
 
 function formatFields(mergeFields) {
@@ -94,7 +107,6 @@ function formatFields(mergeFields) {
 
   return mergeFieldsResult;
 }
-
 
 function formatTags(tags) {
   let tagsResult = [];
