@@ -1,5 +1,7 @@
 homepage: "https://stape.io/"
 versions:
+  - sha: 44d864bac7f051cfba66e1a07f33c54f0877b263
+    changeNotes: Added response logs.
   - sha: 191640183c6119dbd6cdce23a3a3fba87f64f6f8
     changeNotes: Fix log name
   - sha: 2d72f0bc6bc6db1b125eeace7989ac61fcf238a6
