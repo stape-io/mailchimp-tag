@@ -13,7 +13,7 @@ ___INFO___
   "id": "cvt_temp_public_id",
   "version": 1,
   "securityGroups": [],
-  "displayName": "Mailchimp",
+  "displayName": "Mailchimp Event Track",
   "brand": {
     "id": "brand_dummy",
     "displayName": "Stape",
@@ -236,7 +236,7 @@ ___SANDBOXED_JS_FOR_SERVER___
 
 const getRemoteAddress = require('getRemoteAddress');
 const sendHttpRequest = require('sendHttpRequest');
-const encodeUriComponent = require('encodeUriComponent');
+const encodeUri = require('encodeUri');
 const JSON = require('JSON');
 const getRequestHeader = require('getRequestHeader');
 const logToConsole = require('logToConsole');
@@ -251,7 +251,7 @@ if (!apiKeyData[1]) {
   data.gtmOnFailure();
 } else {
   if (data.type === 'createOrUpdateContact' || data.type === 'createOrUpdateContactTrackEvent') {
-    let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/' + encodeUriComponent(data.emailHashed);
+    let url = 'https://' + enc(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + enc(data.listId) + '/members/' + enc(data.emailHashed);
     let method = 'PUT';
     let bodyData = {
       email_address: data.email,
@@ -313,7 +313,7 @@ if (!apiKeyData[1]) {
 }
 
 function sendEventRequest() {
-  let url = 'https://' + encodeUriComponent(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + encodeUriComponent(data.listId) + '/members/' + encodeUriComponent(data.emailHashed) + '/events';
+  let url = 'https://' + enc(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + enc(data.listId) + '/members/' + enc(data.emailHashed) + '/events';
   let method = 'POST';
   let bodyData = {
     name: data.eventName,
@@ -379,6 +379,11 @@ function formatTags(tags) {
   }
 
   return tagsResult;
+}
+
+function enc(data) {
+    data = data || '';
+    return encodeUri(data);
 }
 
 function determinateIsLoggingEnabled() {
