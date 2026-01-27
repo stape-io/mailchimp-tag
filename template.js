@@ -1,13 +1,24 @@
-﻿const getRemoteAddress = require('getRemoteAddress');
-const sendHttpRequest = require('sendHttpRequest');
-const encodeUri = require('encodeUri');
-const JSON = require('JSON');
-const getRequestHeader = require('getRequestHeader');
-const logToConsole = require('logToConsole');
+﻿const encodeUriComponent = require('encodeUriComponent');
+const getAllEventData = require('getAllEventData');
 const getContainerVersion = require('getContainerVersion');
+const getRemoteAddress = require('getRemoteAddress');
+const getRequestHeader = require('getRequestHeader');
+const getType = require('getType');
+const JSON = require('JSON');
+const logToConsole = require('logToConsole');
+const makeString = require('makeString');
+const sendHttpRequest = require('sendHttpRequest');
+
+/*==============================================================================
+==============================================================================*/
 
 const isLoggingEnabled = determinateIsLoggingEnabled();
 const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
+const eventData = getAllEventData();
+
+if (!isConsentGivenOrNotRequired(data, eventData)) {
+  return data.gtmOnSuccess();
+}
 
 let apiKeyData = data.apiKey.split('-');
 
@@ -15,13 +26,19 @@ if (!apiKeyData[1]) {
   data.gtmOnFailure();
 } else {
   if (data.type === 'createOrUpdateContact' || data.type === 'createOrUpdateContactTrackEvent') {
-    let url = 'https://' + enc(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + enc(data.listId) + '/members/' + enc(data.emailHashed);
+    let url =
+      'https://' +
+      enc(apiKeyData[1]) +
+      '.api.mailchimp.com/3.0/lists/' +
+      enc(data.listId) +
+      '/members/' +
+      enc(data.emailHashed);
     let method = 'PUT';
     let bodyData = {
       email_address: data.email,
       status_if_new: 'subscribed',
       ip_signup: getRemoteAddress(),
-      merge_fields: formatFields(data.mergeFields),
+      merge_fields: formatFields(data.mergeFields)
     };
 
     if (data.contactTags && data.contactTags.length) {
@@ -37,7 +54,7 @@ if (!apiKeyData[1]) {
           EventName: 'CreateOrUpdateContact',
           RequestMethod: method,
           RequestUrl: url,
-          RequestBody: bodyData,
+          RequestBody: bodyData
         })
       );
     }
@@ -54,7 +71,7 @@ if (!apiKeyData[1]) {
               EventName: 'CreateOrUpdateContact',
               ResponseStatusCode: statusCode,
               ResponseHeaders: headers,
-              ResponseBody: body,
+              ResponseBody: body
             })
           );
         }
@@ -76,12 +93,23 @@ if (!apiKeyData[1]) {
   }
 }
 
+/*==============================================================================
+  Vendor related functions
+==============================================================================*/
+
 function sendEventRequest() {
-  let url = 'https://' + enc(apiKeyData[1]) + '.api.mailchimp.com/3.0/lists/' + enc(data.listId) + '/members/' + enc(data.emailHashed) + '/events';
+  let url =
+    'https://' +
+    enc(apiKeyData[1]) +
+    '.api.mailchimp.com/3.0/lists/' +
+    enc(data.listId) +
+    '/members/' +
+    enc(data.emailHashed) +
+    '/events';
   let method = 'POST';
   let bodyData = {
     name: data.eventName,
-    properties: formatFields(data.eventProperties),
+    properties: formatFields(data.eventProperties)
   };
 
   if (isLoggingEnabled) {
@@ -93,7 +121,7 @@ function sendEventRequest() {
         EventName: data.eventName,
         RequestMethod: method,
         RequestUrl: url,
-        RequestBody: bodyData,
+        RequestBody: bodyData
       })
     );
   }
@@ -110,7 +138,7 @@ function sendEventRequest() {
             EventName: data.eventName,
             ResponseStatusCode: statusCode,
             ResponseHeaders: headers,
-            ResponseBody: body,
+            ResponseBody: body
           })
         );
       }
@@ -145,14 +173,28 @@ function formatTags(tags) {
   return tagsResult;
 }
 
+/*==============================================================================
+Helpers
+==============================================================================*/
+
 function enc(data) {
-    data = data || '';
-    return encodeUri(data);
+  if (['null', 'undefined'].indexOf(getType(data)) !== -1) data = '';
+  return encodeUriComponent(makeString(data));
+}
+
+function isConsentGivenOrNotRequired(data, eventData) {
+  if (data.adStorageConsent !== 'required') return true;
+  if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
+  const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
+  return xGaGcs[2] === '1';
 }
 
 function determinateIsLoggingEnabled() {
   const containerVersion = getContainerVersion();
-  const isDebug = !!(containerVersion && (containerVersion.debugMode || containerVersion.previewMode));
+  const isDebug = !!(
+    containerVersion &&
+    (containerVersion.debugMode || containerVersion.previewMode)
+  );
 
   if (!data.logType) {
     return isDebug;
