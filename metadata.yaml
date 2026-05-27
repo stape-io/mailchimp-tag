@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://stape.io/blog/connect-your-website-to-mailchimp-using-google-tag-manager-server-container'
 versions:
+  - sha: 0a29a41bd3ddbeadcbd6d236d0974202263431be
+    changeNotes: Logging removal.
   - sha: 86c3edda4f061007af436d828d383b0eb6b1b6fa
     changeNotes: Added consent section.
   - sha: 26e19327dc73a3f1b692dab31d02a678e19b4b1c
